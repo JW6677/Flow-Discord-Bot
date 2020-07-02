@@ -1,0 +1,16 @@
+{
+  "name": "flow",
+  "version": "1.0.0",
+  "description": "A Discord Bot",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "JW66 / Datralol",
+  "license": "ISC",
+  "dependencies": {
+    "discord": "^0.8.2",
+    "discord.js": "^12.2.0",
+    "fs": "0.0.1-security"
+  }
+}
