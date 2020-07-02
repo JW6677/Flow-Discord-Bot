@@ -1,16 +1,22 @@
 {
-  "name": "flow",
+  "name": "flow-discord-bot",
   "version": "1.0.0",
-  "description": "A Discord Bot",
+  "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "JW66 / Datralol",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JW6677/Flow-Discord-Bot.git"
+  },
+  "author": "JW66",
   "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/JW6677/Flow-Discord-Bot/issues"
+  },
+  "homepage": "https://github.com/JW6677/Flow-Discord-Bot#readme",
   "dependencies": {
-    "discord": "^0.8.2",
-    "discord.js": "^12.2.0",
-    "fs": "0.0.1-security"
+    "discord.js": "^12.2.0"
   }
 }
