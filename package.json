@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/JW6677/Flow-Discord-Bot#readme",
   "dependencies": {
-    "discord.js": "^12.2.0"
+    "discord.js": "^12.2.0",
+    "simple-spellchecker": "^1.0.0"
   }
 }

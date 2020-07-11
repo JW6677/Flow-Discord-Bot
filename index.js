@@ -1,137 +1,113 @@
 const Discord = require ('discord.js');
+const SpellChecker = require('simple-spellchecker');
 const fs = require("fs");
 const client = new Discord.Client();
-var today = new Date();
-var date = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
-const version = 'Flow V1.0.1';
-const prefix = '!';
+const version = 'Flow V1.0.5';
+const PREFIX = '?'
 
 //Loading secrets file / Json Parsing
 const secretsFile = fs.readFileSync('./secrets.json');
 const secrets = JSON.parse(secretsFile);
 
-// Opinion files / array setup
-const opinionsFile = fs.readFileSync("./opinions.txt", "utf-8");
-const opinions = opinionsFile.split("\n")
+const dictionaryDE = SpellChecker.getDictionarySync('de-DE');    
+const dictionaryGB = SpellChecker.getDictionarySync('en-GB');
+const dictionaryUS = SpellChecker.getDictionarySync('en-US');
+const dictionaryES = SpellChecker.getDictionarySync('es-ES');
+const dictionaryFR = SpellChecker.getDictionarySync('fr-FR');
+const wordTotal = dictionaryDE.getLength() + dictionaryGB.getLength() + dictionaryUS.getLength() + dictionaryES.getLength() + dictionaryFR.getLength()
 
-// Meme file / array setup
-const memeFile = fs.readFileSync("./memes.txt", "utf-8");
-const memes = memeFile.split("\n")
+const botInfo = new Discord.MessageEmbed()
+.setTitle('Flow Info BETA')
+.addField('Flow Version', version)
+.addField('German Words', dictionaryDE.getLength())
+.addField('English - British Words', dictionaryGB.getLength())
+.addField('English - American Words', dictionaryUS.getLength())
+.addField('Spanish Words', dictionaryES.getLength())
+.addField('French Words', dictionaryFR.getLength())
+.addField('Total Words Known', wordTotal)
+.setFooter('Flow BETA')
+.setColor('0xffb300');
 
 client.on('message', msg=>{
-    let args = msg.content.substring(prefix.length).split(' ')
+    let args = msg.content.substring(PREFIX.length).split(' ');
     switch(args[0]){
-        case 'pog':
-            msg.channel.send('Pog dude')
-            console.log(msg.author.username, ", Pog dude");
-        break;
-
-        case 'opinion':
-            let opinion = opinions[getRandomInt(opinions.length)];
-            console.log(msg.author.username, ", Giving the Opinion :");
-            console.log(opinion)
-            msg.reply(opinion)
-        break;
-
-        case 'wholesome':
-            console.log(msg.author.username, ", Giving the Wholesome Meme :");
-            Wholesome();
-        break;
-
-        case 'flip':
-            let fliper = getRandomInt(2);
-            console.log(msg.author.username, ", Flipping the coin :");
-            if(fliper == 0){
-                let headsembed = new Discord.MessageEmbed()
-                .setTitle('Flipping...')
-                .attachFiles(['./assets/flip/heads.gif'])
-                .setImage('attachment://heads.gif');
-                msg.channel.send(headsembed)
-                console.log('Heads')
-            }
-            if(fliper == 1){
-                let tailsembed = new Discord.MessageEmbed()
-                .setTitle('Flipping...')
-                .attachFiles(['./assets/flip/tails.gif'])
-                .setImage('attachment://tails.gif');
-                msg.channel.send(tailsembed)
-                console.log('Tails')
-            }
-        break;
-        
-        case 'test':
-            Discord.Guild.channels.create('poggers');
-        break;
         case 'info':
-            let infoembed = new Discord.MessageEmbed()
-            .setTitle('Flow Info')
-            .addField('Name:', 'Flow')
-            .addField('Version', version)
-            .addField('Last Update', '04/7/2020')
-            .setColor(0xF1C40F)
-            .setThumbnail('https://i.ibb.co/LJYVSv2/flow.jpg')
-            .setFooter(date);
-            msg.channel.send(infoembed)
+            msg.channel.send(botInfo);
+        break;
+
+        case 'check':
+            let output = []
+            for (i = 2; i < args.length; i++) {
+                switch(args[1]){
+                    case 'DE':
+                        if(dictionaryDE.isMisspelled(args[i]) == true){
+                            let suggestion = dictionaryDE.getSuggestions(args[i], 1)
+                            suggestion = suggestion.toString()
+                            output.push(suggestion);
+                        } else {
+                            output.push(args[i]);
+                        }
+                    break;
+                    case 'GB':
+                        if(dictionaryGB.isMisspelled(args[i]) == true){
+                            let suggestion = dictionaryGB.getSuggestions(args[i], 1)
+                            suggestion = suggestion.toString()
+                            output.push(suggestion);
+                        } else {
+                            output.push(args[i]);
+                        }
+                    break;
+                    case 'US':
+                        if(dictionaryUS.isMisspelled(args[i]) == true){
+                            let suggestion = dictionaryUS.getSuggestions(args[i], 1)
+                            suggestion = suggestion.toString()
+                            output.push(suggestion);
+                        } else {
+                            output.push(args[i]);
+                        }
+                    break;
+                    case 'ES':
+                        if(dictionaryES.isMisspelled(args[i]) == true){
+                            let suggestion = dictionaryES.getSuggestions(args[i], 1)
+                            suggestion = suggestion.toString()
+                            output.push(suggestion);
+                        } else {
+                            output.push(args[i]);
+                        }
+                    break;
+                    case 'FR':
+                        if(dictionaryFR.isMisspelled(args[i]) == true){
+                            let suggestion = dictionaryFR.getSuggestions(args[i], 1)
+                            suggestion = suggestion.toString()
+                            output.push(suggestion);
+                        } else {
+                            output.push(args[i]);
+                        }
+                    break;
+                }
+            }
+            output = output.toString();
+            newOutput = output.replace(/,/g, ' ');
+            let correction = new Discord.MessageEmbed()
+            .setTitle(newOutput.toString());
+            msg.channel.send(correction)
         break;
     }
 })
 
 console.log('Loading Bot...')
-console.log(date)
 client.on('ready', () => {
     console.log('Bot Loaded');
+    console.log(`de-DE: Successfuly loaded ${dictionaryDE.getLength()} words`);
+    console.log(`en-GB: Successfuly loaded ${dictionaryGB.getLength()} words`);
+    console.log(`en-US: Successfuly loaded ${dictionaryUS.getLength()} words`);
+    console.log(`es-ES: Successfuly loaded ${dictionaryES.getLength()} words`);
+    console.log(`fr-FR: Successfuly loaded ${dictionaryFR.getLength()} words`);
+    console.log(`A total of ${wordTotal} words has been loaded into memory`)
 })
 
 client.login(secrets.token);
 
 function getRandomInt(max) {
     return Math.floor(Math.random() * Math.floor(max));
-}
-
-//Wholesome memes function
-function Wholesome(){
-    let wholesomeamount = 5
-    let wholesomeID = getRandomInt(wholesomeamount)
-    if(wholesomeID == 0){
-        let wholesome0 = new Discord.MessageEmbed()
-        .attachFiles(['./assets/memes/wholesome/cat-flower.png'])
-        .setImage('attachment://cat-flower.png');
-        msg.channel.send(wholesome0)
-        console.log('Wholesome0 - cat-flower.png')
-    }
-    if(wholesomeID == 1){
-        let wholesome1 = new Discord.MessageEmbed()
-        .attachFiles(['./assets/memes/wholesome/cat-roomba.png'])
-        .setImage('attachment://cat-roomba.png');
-        msg.channel.send(wholesome1)
-        console.log('Wholesome1 - cat-roomba.png')
-    }
-    if(wholesomeID == 2){
-        let wholesome2 = new Discord.MessageEmbed()
-        .attachFiles(['./assets/memes/wholesome/cat-slide.png'])
-        .setImage('attachment://cat-slide.png');
-        msg.channel.send(wholesome2)
-        console.log('Wholesome2 - cat-slide.png')
-    }
-    if(wholesomeID == 3){
-        let wholesome3 = new Discord.MessageEmbed()
-        .attachFiles(['./assets/memes/wholesome/dog-dance.png'])
-        .setImage('attachment://dog-dance.png');
-        msg.channel.send(wholesome3)
-        console.log('Wholesome3 - dog-dance.png')
-    }
-    if(wholesomeID == 4){
-        let wholesome4 = new Discord.MessageEmbed()
-        .attachFiles(['./assets/memes/wholesome/dog-love.png'])
-        .setImage('attachment://dog-love.png');
-        msg.channel.send(wholesome4)
-        console.log('Wholesome4 - dog-love.png')
-    }
-    if(wholesomeID == 5){
-        let wholesome5 = new Discord.MessageEmbed()
-        .attachFiles(['./assets/memes/wholesome/shiba-grin.png'])
-        .setImage('attachment://shiba-grin.png');
-        msg.channel.send(wholesome5)
-        console.log('Wholesome5 - shiba-grin.png')
-    }
 }
