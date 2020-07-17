@@ -17,7 +17,9 @@
   },
   "homepage": "https://github.com/JW6677/Flow-Discord-Bot#readme",
   "dependencies": {
+    "bad-words": "^3.0.3",
     "discord.js": "^12.2.0",
-    "simple-spellchecker": "^1.0.0"
+    "simple-spellchecker": "^1.0.0",
+    "wolfram-alpha-api": "file:wolfram-alpha-api-1.0.0-rc.1.tgz"
   }
 }

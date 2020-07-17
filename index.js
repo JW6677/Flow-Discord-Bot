@@ -1,13 +1,18 @@
 const Discord = require ('discord.js');
 const SpellChecker = require('simple-spellchecker');
+const Filter = require('bad-words'),
+filter = new Filter();
+const WolframAlphaAPI = require('wolfram-alpha-api');
 const fs = require("fs");
 const client = new Discord.Client();
+const talkedRecently = new Set();
 const version = 'Flow V1.0.5';
 const PREFIX = '?'
 
 //Loading secrets file / Json Parsing
 const secretsFile = fs.readFileSync('./secrets.json');
 const secrets = JSON.parse(secretsFile);
+const waApi = WolframAlphaAPI(secrets.wolframtoken);
 
 const dictionaryDE = SpellChecker.getDictionarySync('de-DE'); //German Dictionary 
 const dictionaryGB = SpellChecker.getDictionarySync('en-GB'); //British English Dictionary
@@ -15,28 +20,30 @@ const dictionaryUS = SpellChecker.getDictionarySync('en-US'); //American English
 const dictionaryES = SpellChecker.getDictionarySync('es-ES'); //Spanish Dictionary
 const dictionaryMX = SpellChecker.getDictionarySync('es-MX'); //Spanish Mexico Dictionary
 const dictionaryFR = SpellChecker.getDictionarySync('fr-FR'); //French Dictionary
-const dictionaryIT = SpellChecker.getDictionarySync('it-IT'); //Italian Dictionary N
-const dictionaryNL = SpellChecker.getDictionarySync('nl-NL'); //Dutch Dictionary N
-const dictionaryPL = SpellChecker.getDictionarySync('pl-PL'); //Polish Dictionary N
-const dictionaryBR = SpellChecker.getDictionarySync('pt-BR'); //Brazil Portuguese Dictionary N
-const dictionarySV = SpellChecker.getDictionarySync('sv-SE'); //Sweedish Dictionary N
+const dictionaryIT = SpellChecker.getDictionarySync('it-IT'); //Italian Dictionary
+const dictionaryNL = SpellChecker.getDictionarySync('nl-NL'); //Dutch Dictionary
+const dictionaryPL = SpellChecker.getDictionarySync('pl-PL'); //Polish Dictionary
+const dictionaryBR = SpellChecker.getDictionarySync('pt-BR'); //Brazil Portuguese Dictionary
+const dictionarySV = SpellChecker.getDictionarySync('sv-SE'); //Sweedish Dictionary
 const wordTotal = dictionaryDE.getLength() + dictionaryGB.getLength() + dictionaryUS.getLength() + dictionaryES.getLength() + dictionaryMX.getLength() + dictionaryFR.getLength() + dictionaryIT.getLength() + dictionaryNL.getLength() + dictionaryPL.getLength() + dictionaryBR.getLength() + dictionarySV.getLength()
 
+//Message embed setup
 const botInfo = new Discord.MessageEmbed()
 .setTitle('Flow Info BETA')
 .addField('Flow Version', version)
+/*
 .addField('German Words', dictionaryDE.getLength())
-.addField('English - British Words', dictionaryGB.getLength())
-.addField('English - American Words', dictionaryUS.getLength())
-.addField('Spanish Words', dictionaryES.getLength())
-.addField('Spanish Mexico Words', dictionaryMX.getLength())
+.addField('English Words', dictionaryGB.getLength() + dictionaryUS.getLength())
+.addField('Spanish Words', dictionaryES.getLength() + dictionaryMX.getLength())
 .addField('French Words', dictionaryFR.getLength())
 .addField('Italian Words', dictionaryIT.getLength())
 .addField('Dutch Words', dictionaryNL.getLength())
 .addField('Polish Words', dictionaryPL.getLength())
-.addField('Brazillian Portuguese Words', dictionaryBR.getLength())
+.addField('Brazillian Words', dictionaryBR.getLength())
 .addField('Sweedish Words', dictionarySV.getLength())
+*/
 .addField('Total Words Known', wordTotal)
+.addField('Programmed By', 'JW66')
 .setFooter('Flow BETA')
 .setColor('0xffb300');
 
@@ -47,7 +54,57 @@ client.on('message', msg=>{
             msg.channel.send(botInfo);
         break;
 
-        case 'check':
+        case 'ask':
+            if (talkedRecently.has(msg.author.id)) {
+                msg.delete();
+                msg.channel.send('❗ Wait 1 minute before getting using this again.')
+                    .then(message => {
+                        message.delete({ timeout: 10000 })
+                    })
+                    .catch();
+            } else {
+                args.shift();
+                let question = args.toString();
+                question = question.replace(/,/g, ' ');
+                if (filter.isProfane(question) == false) {
+                    waApi.getSpoken(question).then((data) => {
+                        let wolframResult = new Discord.MessageEmbed()
+                            .setTitle(data)
+                        msg.channel.send(wolframResult)
+                            .then(message => {
+                                message.delete({ timeout: 10000 })
+                            })
+                            .catch();
+                    }).catch((error) => {
+                        let wolframError = new Discord.MessageEmbed()
+                            .setTitle(`I'm sorry, Wolfram Alpha did not understand your request.`)
+                        msg.channel.send(wolframError)
+                            .then(message => {
+                                message.delete({ timeout: 10000 })
+                            })
+                            .catch();
+                    });
+                } else {
+                    msg.delete();
+                    msg.channel.send('❗ Sorry you cannot use profanity')
+                        .then(message => {
+                            message.delete({ timeout: 10000 })
+                        })
+                        .catch();
+                }
+                
+                // Adds the user to the set so that they can't talk for a minute
+                console.log(`${msg.author.username} Used Wolfram Alpha. Adding them to the cooldown set`)
+                talkedRecently.add(msg.author.id);
+                setTimeout(() => {
+                    // Removes the user from the set after a minute
+                    talkedRecently.delete(msg.author.id);
+                    console.log(`${msg.author.username} Can now use Wolfram Alpha again. Removing them from the set`)
+                }, 60000);
+            }
+        break;
+
+        case 'spell':
             let output = []
             for (i = 2; i < args.length; i++) {
                 switch(args[1]){
@@ -157,6 +214,10 @@ client.on('message', msg=>{
             let correction = new Discord.MessageEmbed()
             .setTitle(newOutput.toString());
             msg.channel.send(correction)
+                .then(message => {
+                    message.delete({ timeout: 10000 })
+                })
+                .catch();
         break;
     }
 })
